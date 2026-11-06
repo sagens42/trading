@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BTC Option Odds</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --good: #006300; --good-bg: rgba(12,163,12,0.10); --bad: #b52f2f; --bad-bg: rgba(208,59,59,0.10);
+  --atm: rgba(42,120,214,0.07);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --good: #0ca30c; --good-bg: rgba(12,163,12,0.16); --bad: #e66767; --bad-bg: rgba(208,59,59,0.18);
+    --atm: rgba(57,135,229,0.12);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --good: #0ca30c; --good-bg: rgba(12,163,12,0.16); --bad: #e66767; --bad-bg: rgba(208,59,59,0.18);
+  --atm: rgba(57,135,229,0.12);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1320px; margin: 0 auto; padding: 20px 16px 48px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 15px; margin: 0 0 8px; }
+p { margin: 0 0 8px; }
+a { color: var(--s1); }
+.sub { color: var(--ink-2); margin-bottom: 16px; }
+#status { color: var(--muted); font-size: 12px; }
+#error { background: var(--bad-bg); color: var(--bad); padding: 10px 12px; border-radius: 8px; margin: 12px 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 16px; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: end; }
+.controls fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.controls legend { font-size: 12px; font-weight: 600; color: var(--ink-2); padding: 0; margin-bottom: 6px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--ink-2); }
+select, button { font: inherit; color: var(--ink); background: var(--page); border: 1px solid var(--axis); border-radius: 8px; padding: 6px 10px; min-height: 34px; }
+button { cursor: pointer; }
+.seg { display: inline-flex; border: 1px solid var(--axis); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; background: transparent; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
+.v2 { border-left: 3px solid var(--s2) !important; padding-left: 12px !important; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 16px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.tile-k { font-size: 12px; color: var(--ink-2); }
+.tile-v { font-size: 22px; font-weight: 600; margin: 2px 0; }
+.tile-s { font-size: 12px; color: var(--muted); }
+#warn p { color: var(--ink-2); font-size: 12px; margin: 10px 0 0; }
+.charts { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
+.charts .card { min-width: 0; }
+@media (max-width: 860px) { .charts { grid-template-columns: 1fr; } }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--ink-2); margin-bottom: 6px; }
+.key { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.key.s1 { background: var(--s1); } .key.s2 { background: var(--s2); } .key.s3 { background: var(--s3); }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+.grid { stroke: var(--grid); stroke-width: 1; }
+.axis { stroke: var(--axis); stroke-width: 1; }
+.marker { stroke: var(--muted); stroke-dasharray: 3 3; }
+.cross { stroke: var(--muted); stroke-width: 1; }
+.tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.line { fill: none; stroke-width: 2; stroke-linejoin: round; }
+.line.dash { stroke-dasharray: 6 4; }
+.line.s1 { stroke: var(--s1); } .line.s2 { stroke: var(--s2); } .line.s3 { stroke: var(--s3); }
+.dot { stroke: var(--surface); stroke-width: 2; }
+.dot.s1 { fill: var(--s1); } .dot.s2 { fill: var(--s2); } .dot.s3 { fill: var(--s3); }
+.hit { fill: transparent; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); min-width: 170px; }
+.tip-h { font-weight: 600; margin-bottom: 4px; }
+.tip div { display: flex; align-items: center; gap: 4px; }
+.tip b { margin-left: auto; padding-left: 12px; font-variant-numeric: tabular-nums; }
+.table-wrap { overflow-x: auto; margin: 0 -16px; padding: 0 16px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 13px; }
+th, td { padding: 6px 7px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); }
+th { font-size: 11px; font-weight: 600; color: var(--ink-2); position: sticky; top: 0; background: var(--surface); }
+th.g, td.g { border-left: 1px solid var(--grid); }
+.sticky { position: sticky; left: 0; background: var(--surface); text-align: left; z-index: 1; font-weight: 600; }
+tr.atm td { background: var(--atm); }
+tr.atm td.sticky { background: linear-gradient(var(--atm), var(--atm)), var(--surface); }
+.muted { color: var(--muted); }
+td.hi { font-weight: 600; } td.hi::after { content: " ↑"; color: var(--muted); font-weight: 400; }
+td.lo { font-weight: 600; } td.lo::after { content: " ↓"; color: var(--muted); font-weight: 400; }
+td.buy { color: var(--good); background: var(--good-bg); }
+td.sell { color: var(--bad); background: var(--bad-bg); }
+.badge { font-weight: 600; }
+.note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+details { margin-top: 16px; }
+summary { cursor: pointer; font-weight: 600; }
+.method { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 12px; }
+.method h3 { font-size: 14px; margin: 0 0 6px; }
+.method ul { margin: 0; padding-left: 18px; color: var(--ink-2); }
+.method li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>BTC option odds from history</h1>
+  <p class="sub">How often BTC historically moved far enough to finish beyond each Bybit strike by expiry, next to what the option price implies. Two models side by side: <b>V1</b> raw history, <b>V2</b> adjusted for today's volatility, recency and drift.</p>
+  <div id="status"></div>
+  <div id="error" hidden></div>
+
+  <section class="card controls" aria-label="Controls">
+    <label>Expiry <select id="expiry"></select></label>
+    <label id="settle-wrap" hidden>Settle <select id="settle"></select></label>
+    <div><div class="legend" style="margin-bottom:4px">Side</div>
+      <div class="seg" role="group"><button data-side="C" aria-pressed="true">Calls</button><button data-side="P" aria-pressed="false">Puts</button></div></div>
+    <label>Strikes
+      <select id="range"><option value="0.15">±15%</option><option value="0.3">±30%</option><option value="0.5" selected>±50%</option><option value="99">All</option></select></label>
+    <fieldset class="v2">
+      <legend>V2 settings</legend>
+      <label>Lookback <select id="v2-lookback"><option value="1">1 year</option><option value="2">2 years</option><option value="4" selected>4 years</option><option value="0">All</option></select></label>
+      <label>Recency weight <select id="v2-halfLife"><option value="0">None</option><option value="180">Half-life 6 mo</option><option value="365" selected>Half-life 1 yr</option><option value="730">Half-life 2 yr</option></select></label>
+      <label>Scale to vol <select id="v2-vol"><option value="ewma" selected>Current realized</option><option value="iv">Market ATM IV</option><option value="none">No scaling</option></select></label>
+      <label>Drift <select id="v2-drift"><option value="zero" selected>Zero (around forward)</option><option value="hist">Historical</option></select></label>
+    </fieldset>
+    <button id="refresh">Refresh</button>
+  </section>
+
+  <section class="tiles" id="summary" aria-label="Summary"></section>
+  <div id="warn"></div>
+
+  <div class="charts">
+    <section class="card">
+      <h2 id="prob-title">Chance BTC finishes above each price</h2>
+      <div class="legend"><span><span class="key s1"></span>V1 history</span><span><span class="key s2"></span>V2 adjusted</span><span><span class="key s3"></span>Market (from each strike's IV)</span></div>
+      <div class="chart" id="prob-chart"></div>
+      <p class="note">Where a history line sits above the market line, history says upside beyond that price is more likely than the option price assumes.</p>
+    </section>
+    <section class="card">
+      <h2>Volatility by expiry (annualized)</h2>
+      <div class="legend"><span><span class="key s1"></span>V1 history</span><span><span class="key s2"></span>V2 adjusted</span><span><span class="key s3"></span>Market ATM IV</span></div>
+      <div class="chart" id="vol-chart"></div>
+      <p class="note">Market IV above the history lines means options are priced for bigger moves than history (or today's regime) suggests.</p>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2 id="table-title">Strikes</h2>
+    <div class="table-wrap"><div id="table"></div></div>
+    <p class="note">P(ITM): chance the option finishes in the money. ↑/↓ marks a model at least 5 points above/below the market. P(touch): chance price trades through the strike at any time before expiry. Fair: average payoff at expiry under the model, in USD. Edge: fair value minus the ask (buy) or bid minus fair value (sell), so the spread is already paid (hover for % of price); blank when fair value sits inside the spread. Fees are not included.</p>
+  </section>
+
+  <details class="card">
+    <summary>How V1 and V2 work, and their limits</summary>
+    <div class="method">
+      <div><h3>V1 · raw history</h3><ul>
+        <li>Every overlapping N-day window of Bybit BTCUSD daily bars since late 2018, where N is the days to expiry.</li>
+        <li>Each window's close-to-close return is applied to today's spot. The share of windows ending above a strike is the probability.</li>
+        <li>Touch uses each window's highest high and lowest low.</li>
+        <li>Equal weights, historical drift kept. BTC's huge past rally pushes calls up and puts down.</li></ul></div>
+      <div><h3>V2 · adjusted</h3><ul>
+        <li>Lookback limits history to recent years; recency weight fades old windows with the chosen half-life.</li>
+        <li>Volatility scaling: each window is rescaled by (vol expected now over N days) ÷ (vol expected then over N days), using EWMA vol (λ=0.94) mean-reverting with a 30-day half-life. It keeps history's shape (fat tails, skew) but matches today's regime. "Market ATM IV" scales to the option market's own vol, isolating shape differences.</li>
+        <li>Zero drift centres outcomes on the expiry's forward, the same anchor option prices use. Historical drift centres on spot and keeps the trend.</li></ul></div>
+      <div><h3>Read it carefully</h3><ul>
+        <li>Overlapping windows are not independent. A 90-day expiry has only ~30 truly separate periods since 2018 (shown under each vol tile).</li>
+        <li>Market prices include information history lacks: events, positioning, funding. A gap is a question, not a trade.</li>
+        <li>A high win rate is not profit. Short far-OTM options win often and lose big. Compare fair value with price, not just probability.</li>
+        <li>Bybit option fees and slippage are not included. Small edges disappear.</li></ul></div>
+    </div>
+  </details>
+</main>
+<script src="model.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
