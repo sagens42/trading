@@ -19,11 +19,11 @@ Two models run side by side:
 ### Run it
 
 ```bash
-python3 server.py
+node server.js
 ```
 
-Then open http://localhost:8000. The page calls Bybit's public API straight from the browser
-and falls back to the local proxy in `server.py` if the browser can't reach it. No API key needed.
+Then open http://localhost:8000 (Node 18+, no dependencies). The page calls Bybit's public API straight from the browser
+and falls back to the local proxy in `server.js` if the browser can't reach it. No API key needed.
 
 - `?demo=1` uses synthetic data (works offline).
 - `?host=api.bytick.com` uses an alternate Bybit API domain if `api.bybit.com` is blocked where you are.

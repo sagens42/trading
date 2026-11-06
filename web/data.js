@@ -1,7 +1,7 @@
 /*
  * Data from Bybit's public v5 API (no key needed).
  * Tries the API directly from the browser first; if that is blocked (CORS or
- * network), falls back to the local proxy in server.py at ./bybit/...
+ * network), falls back to the local proxy in server.js at ./bybit/...
  * ?demo=1 in the URL uses synthetic data instead.
  */
 (function (root) {
@@ -33,7 +33,7 @@
         return out;
       } catch (e) { lastErr = e; }
     }
-    throw new Error('Could not reach Bybit (' + lastErr.message + '). Run server.py, or open with ?demo=1.');
+    throw new Error('Could not reach Bybit (' + lastErr.message + '). Run node server.js, or open with ?demo=1.');
   }
 
   // "BTC-27DEC26-100000-C" or "BTC-27DEC26-100000-C-USDT"; Bybit options expire 08:00 UTC.
